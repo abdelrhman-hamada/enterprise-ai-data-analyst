@@ -1,14 +1,20 @@
 import pandas as pd 
 from app.schemas.file_scheme import DatasetSummary
+import os
+from fastapi import UploadFile
 
-def read_file (file_path : str ) :
+def load_dataframe (file_path : str ) -> pd.DataFrame :
     if file_path.endswith(".csv") :
-        df = pd.read_csv(file_path)
+        return pd.read_csv(file_path)
     elif file_path.endswith(".xlsx") :
-        df = pd.read_excel(file_path)
+        return pd.read_excel(file_path)
     else :
         raise ValueError("unsupported file format")
 
+
+    
+def read_file (file_path : str ) :
+    df = load_dataframe(file_path)
     rows = len(df)
     columns_count = len(df.columns)
     columns = list(df.columns)
@@ -38,3 +44,13 @@ def read_file (file_path : str ) :
     numeric_summary=numeric_summary,
     preview=preview
     )
+
+
+
+
+async def save_uploaded_file (file : UploadFile) -> str :
+    os.makedirs("uploads" , exist_ok=True)
+    file_path = os.path.join("uploads",file.filename)
+    with open(file_path , "wb") as buffer :
+        buffer.write(await file.read())
+    return file_path
