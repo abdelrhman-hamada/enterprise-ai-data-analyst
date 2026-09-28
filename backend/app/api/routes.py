@@ -5,6 +5,8 @@ from app.services.cleaning_service import analyze_cleaning
 from app.schemas.cleaning_schema import CleaningReport 
 from app.schemas.dataset_report_schema import DatasetReport
 from app.services.report_service import generate_report
+from app.services.chart_service import generate_histogram,generate_bar_chart,generate_boxplot,generate_correlation_heatmap
+from app.schemas.chart_schema import ChartResponse
 
 
 router = APIRouter(prefix="/api", tags=["Data"])
@@ -30,3 +32,65 @@ async def dataset_report(file: UploadFile = File(...)):
     result = generate_report(df)
     return result
 
+@router.post("/charts/histogram", response_model=ChartResponse)
+async def histogram_chart(
+    file: UploadFile = File(...),
+    column: str = ""
+):
+    os.makedirs("uploads", exist_ok=True)
+
+    file_path = os.path.join("uploads", file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    df = load_dataframe(file_path)
+
+    return generate_histogram(df, column)
+
+@router.post("/charts/bar", response_model=ChartResponse)
+async def bar_chart(
+    file: UploadFile = File(...),
+    column: str = ""
+):
+    os.makedirs("uploads", exist_ok=True)
+
+    file_path = os.path.join("uploads", file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    df = load_dataframe(file_path)
+
+    return generate_bar_chart(df, column)
+
+@router.post("/charts/boxplot", response_model=ChartResponse)
+async def boxplot_chart(
+    file: UploadFile = File(...),
+    column: str = ""
+):
+    os.makedirs("uploads", exist_ok=True)
+
+    file_path = os.path.join("uploads", file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    df = load_dataframe(file_path)
+
+    return generate_boxplot(df, column)
+
+@router.post("/charts/heatmap", response_model=ChartResponse)
+async def heatmap_chart(
+    file: UploadFile = File(...)
+):
+    os.makedirs("uploads", exist_ok=True)
+
+    file_path = os.path.join("uploads", file.filename)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    df = load_dataframe(file_path)
+
+    return generate_correlation_heatmap(df)
