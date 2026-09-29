@@ -5,8 +5,9 @@ from app.services.cleaning_service import analyze_cleaning
 from app.schemas.cleaning_schema import CleaningReport 
 from app.schemas.dataset_report_schema import DatasetReport
 from app.services.report_service import generate_report
-from app.services.chart_service import generate_histogram,generate_bar_chart,generate_boxplot,generate_correlation_heatmap
-from app.schemas.chart_schema import ChartResponse
+from app.services.chart_service import generate_histogram,generate_bar_chart,generate_boxplot,generate_correlation_heatmap , recommend_charts
+from app.schemas.chart_schema import ChartResponse , ChartRecommendationResponse
+
 
 
 router = APIRouter(prefix="/api", tags=["Data"])
@@ -37,12 +38,7 @@ async def histogram_chart(
     file: UploadFile = File(...),
     column: str = ""
 ):
-    os.makedirs("uploads", exist_ok=True)
-
-    file_path = os.path.join("uploads", file.filename)
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+    file_path = await save_uploaded_file(file)
 
     df = load_dataframe(file_path)
 
@@ -53,12 +49,7 @@ async def bar_chart(
     file: UploadFile = File(...),
     column: str = ""
 ):
-    os.makedirs("uploads", exist_ok=True)
-
-    file_path = os.path.join("uploads", file.filename)
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+    file_path = await save_uploaded_file(file)
 
     df = load_dataframe(file_path)
 
@@ -69,12 +60,7 @@ async def boxplot_chart(
     file: UploadFile = File(...),
     column: str = ""
 ):
-    os.makedirs("uploads", exist_ok=True)
-
-    file_path = os.path.join("uploads", file.filename)
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+    file_path = await save_uploaded_file(file)
 
     df = load_dataframe(file_path)
 
@@ -84,13 +70,22 @@ async def boxplot_chart(
 async def heatmap_chart(
     file: UploadFile = File(...)
 ):
-    os.makedirs("uploads", exist_ok=True)
-
-    file_path = os.path.join("uploads", file.filename)
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+    file_path = await save_uploaded_file(file)
 
     df = load_dataframe(file_path)
 
     return generate_correlation_heatmap(df)
+
+@router.post(
+    "/charts/recommendations",
+    response_model=ChartRecommendationResponse
+)
+async def chart_recommendations(
+    file: UploadFile = File(...)
+):
+
+    file_path = await save_uploaded_file(file)
+
+    df = load_dataframe(file_path)
+
+    return recommend_charts(df)

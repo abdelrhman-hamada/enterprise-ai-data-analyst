@@ -106,3 +106,56 @@ def generate_correlation_heatmap(df: pd.DataFrame):
             "matrix": correlation.round(3).fillna(0).values.tolist()
         }
     }
+
+def recommend_charts(df: pd.DataFrame):
+    
+    recommendations = []
+
+    numeric_columns = df.select_dtypes(
+        include=["number"]
+    ).columns.tolist()
+
+    categorical_columns = df.select_dtypes(
+        include=["object", "category"]
+    ).columns.tolist()
+
+    # Numeric columns
+    for column in numeric_columns:
+
+        recommendations.append({
+            "chart_type": "histogram",
+            "column": column,
+            "reason": "Numeric column - useful for analyzing data distribution"
+        })
+
+        recommendations.append({
+            "chart_type": "boxplot",
+            "column": column,
+            "reason": "Numeric column - useful for detecting outliers"
+        })
+
+    # Categorical columns
+    for column in categorical_columns:
+
+        unique_count = df[column].nunique(dropna=True)
+
+        if unique_count <= 10:
+
+            recommendations.append({
+                "chart_type": "bar",
+                "column": column,
+                "reason": "Low-cardinality categorical column"
+            })
+
+    # Correlation
+    if len(numeric_columns) >= 2:
+
+        recommendations.append({
+            "chart_type": "heatmap",
+            "column": None,
+            "reason": "Multiple numeric columns are available for correlation analysis"
+        })
+
+    return {
+        "recommendations": recommendations
+    }
